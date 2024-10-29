@@ -36,9 +36,6 @@ public class SignUpService : ISignUpService
         return new SignUpResultDto { Success = true, Message = "User registered successfully" };
     }
 
-    public Task<SignUpResultDto> SignUpAsync(SignUpDTO request)
-    {
-        throw new NotImplementedException();
-    }
+
 }
 

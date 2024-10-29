@@ -44,6 +44,12 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             }
 
         }
+
+        builder.Entity<User>()
+            .HasMany(u => u.BankAccounts)
+            .WithOne(b => b.User)
+            .HasForeignKey(b => b.UserId);
+
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

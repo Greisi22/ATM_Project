@@ -9,7 +9,7 @@ namespace CleanArchitecture.Application.Services.Users;
 public interface IUserService
 {
     Task <List<UserDto>> GetAll();
-    Task<UserDto> Create(UserDto user, CancellationToken cancellationToken);
+    Task<Guid> Create(UserDto user, CancellationToken cancellationToken);
 
     Task<UserDto> GetUserById(Guid id);
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -43,13 +44,15 @@ namespace CleanArchitecture.Application.Services.Token
                 throw new InvalidOperationException("One or more JWT configuration values are missing.");
             }
 
-            _logger.LogInformation("Generating token for user: {Email}", user.Email); 
+            _logger.LogInformation("Generating token for user: {Email}", user.Email);
+            var role = user.Role.ToString();
 
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.Role, role)
+        };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

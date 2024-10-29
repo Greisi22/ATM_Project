@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 using AutoMapper;
 using CleanArchitecture.Application.Common.Interfaces;
 using CleanArchitecture.Application.Models;
+using CleanArchitecture.Domain.Enums;
+using MediatR;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace CleanArchitecture.Application.Services.Users;
@@ -28,17 +32,20 @@ public class UserService : IUserService
         return result;
     }
 
-    public async Task<UserDto> Create(UserDto userDto, CancellationToken cancellationToken)
+    public async Task<Guid> Create(UserDto userDto, CancellationToken cancellationToken)
     {
        
         var user = _mapper.Map<User>(userDto);
-        user.Id = Guid.NewGuid(); 
+        user.Id = Guid.NewGuid();
 
+        user.Role = UserRole.AtmUser;
+        user.Password = userDto.CreatePasswordHash();
         _applicationDbContext.EntitySet<User>().Add(user);
+
         await _applicationDbContext.SaveChangesAsync(cancellationToken);
 
-        var createdUserDto = _mapper.Map<UserDto>(user);
-        return createdUserDto;
+
+        return user.Id;
     }
 
     public async Task<UserDto> GetUserById(Guid id)

@@ -1,9 +1,14 @@
 ﻿using CleanArchitecture.Application.Models;
 using CleanArchitecture.Application.Services.Users;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace API.Controllers;
+
+
+[ApiController]
+[Authorize(Policy = "RequireAdminRole")]
 [Route("user")]
 public class UserController : BaseController
 {

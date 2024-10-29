@@ -13,10 +13,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using CleanArchitecture.Application.Services.SignUp;
 using CleanArchitecture.Application.Services.LogIn;
-using CleanArchitecture.Application.Services.Token; 
+using CleanArchitecture.Application.Services.Token;
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
@@ -42,32 +41,52 @@ builder.Services.AddControllers()
 
 builder.Services.AddCors();
 
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.EnableAnnotations(); 
+    c.EnableAnnotations();
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Your API Title",
+        Title = "ATM_Project",
         Version = "v1"
     });
-});
 
+    // JWT Authentication configuration for Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<ICurrentUserService, CurrentUser>();
-
-
 builder.Services.AddScoped<ISignUpService, SignUpService>();
 builder.Services.AddScoped<ILogInService, LogInService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
-
-
-var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]); 
+var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -75,7 +94,7 @@ builder.Services.AddAuthentication(x =>
 })
 .AddJwtBearer(x =>
 {
-    x.RequireHttpsMetadata = true; 
+    x.RequireHttpsMetadata = true;
     x.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -88,8 +107,14 @@ builder.Services.AddAuthentication(x =>
     };
 });
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("RequireAtmUserRole", policy => policy.RequireRole("AtmUser"));
+    options.AddPolicy("RequireAdminOrUserRole", policy =>
+        policy.RequireRole("Admin", "AtmUser"));
+});
 var app = builder.Build();
-
 
 if (app.Environment.IsDevelopment())
 {
@@ -110,12 +135,12 @@ using (var scope = app.Services.CreateScope())
 app.UseCors(x => x
     .AllowAnyMethod()
     .AllowAnyHeader()
-    .SetIsOriginAllowed(origin => true) 
-    .AllowCredentials()); 
+    .SetIsOriginAllowed(origin => true)
+    .AllowCredentials());
 
 app.UseHttpsRedirection();
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseAuthorization();
-app.UseMiddleware<ExceptionMiddleware>(); 
+app.UseMiddleware<ExceptionMiddleware>();
 app.MapControllers();
 app.Run();
