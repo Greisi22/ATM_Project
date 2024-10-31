@@ -45,14 +45,18 @@ namespace CleanArchitecture.Application.Services.Token
             }
 
             _logger.LogInformation("Generating token for user: {Email}", user.Email);
+            _logger.LogInformation("User ID being added to token: {UserId}", user.Id);
             var role = user.Role.ToString();
 
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.Role, role)
+                new Claim(ClaimTypes.Role, role),
+                new Claim("UserId", user.Id.ToString())
+               
         };
+           
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

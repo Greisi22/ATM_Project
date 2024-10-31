@@ -22,5 +22,5 @@ namespace CleanArchitecture.Domain.Entities;
         public Guid UserId { get; set; }
         public User User { get; set; }
 
-
-    }
+    public ICollection<BankAccountAuditLog> BankAccountAuditLogs { get; set; } = new List<BankAccountAuditLog>();
+}

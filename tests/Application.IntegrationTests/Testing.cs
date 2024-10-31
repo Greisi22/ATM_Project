@@ -50,16 +50,16 @@ public partial class Testing
         await mediator.Send(request);
     }
 
-    public static string? GetCurrentUserId()
+    public static Guid? GetCurrentUserId()
     {
-        return _currentUserId;
+        return _currentUserId != null ? Guid.Parse(_currentUserId) : (Guid?)null;
     }
 
- 
 
-    
 
- 
+
+
+
     public static async Task ResetState()
     {
         try

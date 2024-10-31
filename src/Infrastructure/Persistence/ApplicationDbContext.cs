@@ -2,6 +2,7 @@
 using System.Reflection.Emit;
 using CleanArchitecture.Application.Common.Interfaces;
 using CleanArchitecture.Domain.Common;
+using CleanArchitecture.Domain.Entities;
 using CleanArchitecture.Infrastructure.Common;
 using CleanArchitecture.Infrastructure.Persistence.Interceptors;
 using MediatR;
@@ -50,6 +51,12 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             .WithOne(b => b.User)
             .HasForeignKey(b => b.UserId);
 
+
+        builder.Entity<BankAccount>()
+           .HasMany(b => b.BankAccountAuditLogs)
+           .WithOne(a => a.BankAccount)
+           .HasForeignKey(a => a.BankAccountId)
+           .OnDelete(DeleteBehavior.Cascade);
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -57,8 +64,15 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         optionsBuilder.AddInterceptors(_auditableEntitySaveChangesInterceptor);
     }
 
+
+
+    public DbSet<BankAccount> BankAccounts { get; set; }
+    public DbSet<BankAccountAuditLog> BankAccountAuditLogs { get; set; }
+
+
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        var auditLogs = new List<BankAccountAuditLog>();
 
         foreach (var entry in ChangeTracker.Entries<BaseAuditableEntity>())
         {
@@ -68,36 +82,51 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                     entry.Entity.Id = entry.Entity.Id == Guid.Empty ? Guid.NewGuid() : entry.Entity.Id;
                     entry.Entity.Created = DateTime.UtcNow;
                     entry.Entity.IsDeleted = false;
-                    entry.Entity.CreatedBy = entry.Entity.CreatedBy ?? _currentUserService.UserId;
+                    entry.Entity.CreatedBy = _currentUserService.UserId;
                     break;
 
                 case EntityState.Modified:
                     entry.Entity.LastModified = DateTime.UtcNow;
-                    entry.Entity.LastModifiedBy = entry.Entity.CreatedBy ?? _currentUserService.UserId;
+                    entry.Entity.LastModifiedBy = _currentUserService.UserId;
                     break;
-
             }
         }
 
-        foreach (var entry in ChangeTracker.Entries<BaseEntity>())
+        foreach (var entry in ChangeTracker.Entries<BankAccount>())
         {
-
-            if (entry.State == EntityState.Added)
+            if (entry.State == EntityState.Modified)
             {
-                entry.Entity.Id = entry.Entity.Id == Guid.Empty ? Guid.NewGuid() : entry.Entity.Id;
+                var oldBalance = (double)entry.OriginalValues[nameof(BankAccount.Balance)];
+                var newBalance = entry.CurrentValues.GetValue<double>(nameof(BankAccount.Balance));
+
+                if (oldBalance != newBalance)
+                {
+                    var auditLog = new BankAccountAuditLog
+                    {
+                        BankAccountId = entry.Entity.Id,
+                        OldBalance = oldBalance,
+                        NewBalance = newBalance,
+                        ChangeDate = DateTime.UtcNow,
+                        ChangedBy = _currentUserService.UserId
+                    };
+                    auditLogs.Add(auditLog);
+                }
             }
         }
 
-
-
-        await _mediator.DispatchDomainEvents(this);
+        if (auditLogs.Any())
+        {
+            BankAccountAuditLogs.AddRange(auditLogs);
+        }
 
         return await base.SaveChangesAsync(cancellationToken);
     }
+
 
     public DbSet<T> EntitySet<T>() where T : class
     {
         return Set<T>();
 
     }
+    
 }

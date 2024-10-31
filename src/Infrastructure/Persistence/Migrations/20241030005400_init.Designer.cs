@@ -9,11 +9,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace CleanArchitecture.Infrastructure.Persistence.Migrations
+namespace CleanArchitecture.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241028180321_bankAccount")]
-    partial class bankAccount
+    [Migration("20241030005400_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -58,12 +58,52 @@ namespace CleanArchitecture.Infrastructure.Persistence.Migrations
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_bank_account");
+                        .HasName("pk_bank_accounts");
 
                     b.HasIndex("UserId")
-                        .HasDatabaseName("ix_bank_account_user_id");
+                        .HasDatabaseName("ix_bank_accounts_user_id");
 
-                    b.ToTable("bank_account", (string)null);
+                    b.ToTable("bank_accounts", (string)null);
+                });
+
+            modelBuilder.Entity("CleanArchitecture.Domain.Entities.BankAccountAuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BankAccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bank_account_id");
+
+                    b.Property<DateTime>("ChangeDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("change_date");
+
+                    b.Property<Guid>("ChangedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("changed_by");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<double>("NewBalance")
+                        .HasColumnType("double precision")
+                        .HasColumnName("new_balance");
+
+                    b.Property<double>("OldBalance")
+                        .HasColumnType("double precision")
+                        .HasColumnName("old_balance");
+
+                    b.HasKey("Id")
+                        .HasName("pk_bank_account_audit_logs");
+
+                    b.HasIndex("BankAccountId")
+                        .HasDatabaseName("ix_bank_account_audit_logs_bank_account_id");
+
+                    b.ToTable("bank_account_audit_logs", (string)null);
                 });
 
             modelBuilder.Entity("User", b =>
@@ -104,9 +144,26 @@ namespace CleanArchitecture.Infrastructure.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_bank_account_user_user_id");
+                        .HasConstraintName("fk_bank_accounts_user_user_id");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CleanArchitecture.Domain.Entities.BankAccountAuditLog", b =>
+                {
+                    b.HasOne("CleanArchitecture.Domain.Entities.BankAccount", "BankAccount")
+                        .WithMany("BankAccountAuditLogs")
+                        .HasForeignKey("BankAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_bank_account_audit_logs_bank_accounts_bank_account_id");
+
+                    b.Navigation("BankAccount");
+                });
+
+            modelBuilder.Entity("CleanArchitecture.Domain.Entities.BankAccount", b =>
+                {
+                    b.Navigation("BankAccountAuditLogs");
                 });
 
             modelBuilder.Entity("User", b =>

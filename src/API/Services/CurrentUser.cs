@@ -6,54 +6,51 @@ namespace API.Services;
 
 public class CurrentUser : ICurrentUserService
 {
-    readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IWebHostEnvironment _env;
-    public CurrentUser(IHttpContextAccessor httpContextAccessor, IWebHostEnvironment env)
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public CurrentUser(IHttpContextAccessor httpContextAccessor)
     {
         _httpContextAccessor = httpContextAccessor;
-        _env = env;
     }
-    public string UserId => GetUserName();
 
-    private string GetUserName()
+    private Guid GetUserId()
     {
-        if (!HasHttpContext() || _env.IsDevelopment()) return string.Empty;
+        if (!HasHttpContext())
+            return Guid.Empty;
 
-        var username = GetClaimTypeByName("username");
-        return username ?? string.Empty;
+        var userIdClaim = GetClaimTypeByName("UserId");
+
+        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
     }
+
+    public Guid UserId => GetUserId();
+ 
 
     private string? GetClaimTypeByName(string claimName)
     {
         var claimType = GetClaims().Claims
-            .Where(c => c.Type == claimName)
-            .Select(c => c.Value)
-            .FirstOrDefault();
+            .FirstOrDefault(c => c.Type == claimName)?.Value;
 
         return claimType;
     }
 
     private bool HasHttpContext()
     {
-        return (_httpContextAccessor.HttpContext is not null);
+        return _httpContextAccessor.HttpContext is not null;
     }
 
     private ClaimsPrincipal GetClaims()
     {
+        var authorizationHeader = _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].FirstOrDefault();
+        if (authorizationHeader == null || !authorizationHeader.StartsWith("Bearer "))
+        {
+            return new ClaimsPrincipal(); 
+        }
+
+        var token = authorizationHeader.Substring("Bearer ".Length).Trim();
         var handler = new JwtSecurityTokenHandler();
-        var token = handler.ReadToken(CurrentToken()) as JwtSecurityToken;
+        var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
 
-        var claimsIdentity = new ClaimsIdentity(token.Claims, "Token");
-        var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-
-        return claimsPrincipal;
-    }
-
-    private string CurrentToken()
-    {
-        var authorizationHeader = _httpContextAccessor.HttpContext!.Request.Headers["Authorization"];
-        var token = authorizationHeader.FirstOrDefault()?.Substring("Bearer ".Length).Trim();
-
-        return token;
+        return new ClaimsPrincipal(new ClaimsIdentity(jwtToken?.Claims ?? Enumerable.Empty<Claim>(), "Token"));
     }
 }

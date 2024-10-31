@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using CleanArchitecture.Application.Common.Interfaces;
 using CleanArchitecture.Application.Services.Account;
+using CleanArchitecture.Application.Services.BankAccountAudit;
 using CleanArchitecture.Application.Services.SignUp;
 using CleanArchitecture.Application.Services.Users;
 using CleanArchitecture.Infrastructure.Persistence;
@@ -33,7 +34,8 @@ public static class ConfigureServices
         services.AddTransient<IDateTime, DateTimeService>();
         services.AddTransient<IUserService, UserService>();
         services.AddTransient<IBankAccountService, BankAccountService>();
-        
+        services.AddTransient<IBankAccountAuditService, BankAccountAuditService>();
+
 
 
 
