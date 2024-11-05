@@ -41,11 +41,11 @@ public class BankAccountAuditService : IBankAccountAuditService
         return auditLogDtos;
     }
 
-    public async Task<List<BankAccountAuditLogDto>> GetAuditUserId(Guid Id)
+    public async Task<List<BankAccountAuditLogDto>> GetAuditUserId(string UserEmail)
     {
 
         var auditLogs = await _applicationDbContext.EntitySet<BankAccountAuditLog>()
-         .Where(log => log.ChangedBy == Id)
+         .Where(log => log.ChangedBy == UserEmail)
          .ToListAsync();
 
 

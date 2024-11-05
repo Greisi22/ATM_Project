@@ -34,7 +34,7 @@ public class UserService : IUserService
 
     public async Task<Guid> Create(UserDto userDto, CancellationToken cancellationToken)
     {
-       
+
         var user = _mapper.Map<User>(userDto);
         user.Id = Guid.NewGuid();
 
@@ -50,16 +50,15 @@ public class UserService : IUserService
 
     public async Task<UserDto> GetUserById(Guid id)
     {
-        var user= await _applicationDbContext.EntitySet<User>().FindAsync(id);
+        var user = await _applicationDbContext.EntitySet<User>().FindAsync(id);
 
         if (user == null)
         {
-            return null; 
+            return null;
         }
 
-        
+
         var userDto = _mapper.Map<UserDto>(user);
         return userDto;
     }
 }
-

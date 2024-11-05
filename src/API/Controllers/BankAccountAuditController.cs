@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 [ApiController]
-[Route("auditlog")]
+
 public class BankAccountAuditController : BaseController
 {
     private readonly ILogger<UserController> _logger;
@@ -28,10 +28,10 @@ public class BankAccountAuditController : BaseController
     }
 
     [Microsoft.AspNetCore.Authorization.Authorize(Policy = "RequireAdminRole")]
-    [HttpGet("/SpecificUser/{id}")]
-    public async Task<IActionResult> GetAuditUserId(Guid id)
+    [HttpGet("/SpecificUser/{Email}")]
+    public async Task<IActionResult> GetAuditUserId(string email)
     {
-        var result = await _bankAccountAuditService.GetAuditUserId(id);
+        var result = await _bankAccountAuditService.GetAuditUserId(email);
 
         return Ok(result);
     }

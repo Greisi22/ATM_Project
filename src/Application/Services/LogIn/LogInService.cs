@@ -21,7 +21,7 @@ public class LogInService : ILogInService
     public async Task<LogInResultDto> LoginAsync(LogInDto request, CancellationToken cancellationToken)
     {
         var user = await _applicationDbContext.EntitySet<User>()
-            .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+                 .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
 
         if (user == null)
         {
@@ -29,6 +29,7 @@ public class LogInService : ILogInService
         }
 
         var passwordHasher = new PasswordHasher<User>();
+        
         var result = passwordHasher.VerifyHashedPassword(user, user.Password, request.Password);
 
 
@@ -46,7 +47,7 @@ public class LogInService : ILogInService
         try
         {
             var token = _tokenService.GenerateToken(user);
-            return new LogInResultDto { Success = true, Token = token };
+            return new LogInResultDto { Success = true, Token = token, role = user.Role  };
         }
         catch (Exception ex)
         {

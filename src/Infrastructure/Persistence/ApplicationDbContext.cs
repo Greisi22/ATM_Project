@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
 using CleanArchitecture.Application.Common.Interfaces;
+using CleanArchitecture.Application.Services.Users;
 using CleanArchitecture.Domain.Common;
 using CleanArchitecture.Domain.Entities;
 using CleanArchitecture.Infrastructure.Common;
@@ -15,18 +16,21 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     private readonly IMediator _mediator;
     private readonly AuditableEntitySaveChangesInterceptor _auditableEntitySaveChangesInterceptor;
     private readonly ICurrentUserService  _currentUserService;
+    private readonly IUserService _userService;
 
     public ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options,
 
         IMediator mediator,
         AuditableEntitySaveChangesInterceptor auditableEntitySaveChangesInterceptor,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IUserService userService)
         : base(options)
     {
         _mediator = mediator;
         _auditableEntitySaveChangesInterceptor = auditableEntitySaveChangesInterceptor;
         _currentUserService = currentUserService;
+        _userService = userService;
     }
 
 
@@ -74,6 +78,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     {
         var auditLogs = new List<BankAccountAuditLog>();
 
+        var userId = _currentUserService.UserId;
+        var user = await _userService.GetUserById(userId);
+
         foreach (var entry in ChangeTracker.Entries<BaseAuditableEntity>())
         {
             switch (entry.State)
@@ -107,7 +114,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                         OldBalance = oldBalance,
                         NewBalance = newBalance,
                         ChangeDate = DateTime.UtcNow,
-                        ChangedBy = _currentUserService.UserId
+                        ChangedBy = user.Email
                     };
                     auditLogs.Add(auditLog);
                 }

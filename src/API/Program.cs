@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using CleanArchitecture.Application.Services.SignUp;
 using CleanArchitecture.Application.Services.LogIn;
 using CleanArchitecture.Application.Services.Token;
+using CleanArchitecture.Application.Services.Google;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,7 +40,15 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
-builder.Services.AddCors();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        builder => builder.WithOrigins("http://localhost:3000", "http://localhost:15424", "https://localhost:44322")
+                   .AllowAnyMethod()
+                   .AllowAnyHeader()
+                   .AllowCredentials());
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -85,6 +94,9 @@ builder.Services.AddSingleton<ICurrentUserService, CurrentUser>();
 builder.Services.AddScoped<ISignUpService, SignUpService>();
 builder.Services.AddScoped<ILogInService, LogInService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+
+
 
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
 builder.Services.AddAuthentication(x =>
@@ -132,11 +144,7 @@ using (var scope = app.Services.CreateScope())
     await initialiser.SeedAsync();
 }
 
-app.UseCors(x => x
-    .AllowAnyMethod()
-    .AllowAnyHeader()
-    .SetIsOriginAllowed(origin => true)
-    .AllowCredentials());
+app.UseCors("AllowSpecificOrigin");
 
 app.UseHttpsRedirection();
 app.UseAuthentication();

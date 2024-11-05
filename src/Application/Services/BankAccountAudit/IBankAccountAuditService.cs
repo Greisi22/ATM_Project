@@ -10,6 +10,6 @@ namespace CleanArchitecture.Application.Services.BankAccountAudit;
 public interface IBankAccountAuditService
 {
     Task<List<BankAccountAuditLogDto>> GetAuditBankAccountId(Guid Id);
-    Task<List<BankAccountAuditLogDto>> GetAuditUserId(Guid Id);
+    Task<List<BankAccountAuditLogDto>> GetAuditUserId(string UserEmail);
     Task<List<BankAccountAuditLogDto>> GetAll();
 }

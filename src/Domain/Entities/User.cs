@@ -9,9 +9,9 @@ public class User : BaseEntity
 {
     public string Email { get; set; }
 
-    public string Password { get; set; }
+    public string? Password { get; set; }
 
     public UserRole Role { get; set; }
-
+    public string? GoogleId { get; set; }
     public ICollection<BankAccount> BankAccounts { get; set; } = new List<BankAccount>();
 }

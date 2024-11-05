@@ -14,6 +14,6 @@ public class BankAccountAuditLogDto : IMapFrom<BankAccountAuditLog>
     public double NewBalance { get; set; }
     public DateTime ChangeDate { get; set; } = DateTime.UtcNow;
 
-    public Guid ChangedBy { get; set; }
+    public string ChangedBy { get; set; }
    
 }

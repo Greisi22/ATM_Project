@@ -25,7 +25,9 @@ public class UserDto : IMapFrom<User>
     public string Password { get; set; }
 
    
-   
+
+
+
 
     public void Mapping(Profile profile)
     {

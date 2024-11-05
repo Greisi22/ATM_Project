@@ -3,6 +3,7 @@ using System;
 using CleanArchitecture.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CleanArchitecture.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241104105952_AuthGoogleId")]
+    partial class AuthGoogleId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -116,6 +119,7 @@ namespace CleanArchitecture.Infrastructure.Migrations
                         .HasColumnName("email");
 
                     b.Property<string>("GoogleId")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("google_id");
 
@@ -124,6 +128,7 @@ namespace CleanArchitecture.Infrastructure.Migrations
                         .HasColumnName("is_deleted");
 
                     b.Property<string>("Password")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("password");
 

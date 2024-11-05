@@ -5,9 +5,14 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using CleanArchitecture.Application.Common.Interfaces;
+using CleanArchitecture.Domain.Enums;
+using Google.Apis.Auth;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging; // Add this using directive
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace CleanArchitecture.Application.Services.Token
@@ -15,12 +20,14 @@ namespace CleanArchitecture.Application.Services.Token
     public class TokenService : ITokenService
     {
         private readonly IConfiguration _configuration;
-        private readonly ILogger<TokenService> _logger; 
+        private readonly ILogger<TokenService> _logger;
+        private readonly IApplicationDbContext _applicationDbContext;
 
-        public TokenService(IConfiguration configuration, ILogger<TokenService> logger) 
+        public TokenService(IConfiguration configuration, ILogger<TokenService> logger, IApplicationDbContext applicationDbContext)
         {
             _configuration = configuration;
             _logger = logger;
+            _applicationDbContext = applicationDbContext;
         }
 
         public string GenerateToken(User user)
@@ -54,9 +61,7 @@ namespace CleanArchitecture.Application.Services.Token
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.Role, role),
                 new Claim("UserId", user.Id.ToString())
-               
-        };
-           
+            };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -68,9 +73,13 @@ namespace CleanArchitecture.Application.Services.Token
                 expires: DateTime.UtcNow.AddMinutes(30),
                 signingCredentials: creds);
 
-            _logger.LogInformation("Token generated successfully for user: {Email}", user.Email); 
+            _logger.LogInformation("Token generated successfully for user: {Email}", user.Email);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+       
+
+       
     }
 }
